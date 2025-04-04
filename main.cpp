@@ -1,5 +1,6 @@
 #include <QApplication>
-#include "player.h"
+#include "handlergst.h"
+
 
 QString rtsp_url_1 = "rtsp://mikvideo.ru:10191/user=admin1&password=mikvideo&channel=1&stream=0.sdp?real_stream";
 QString rtsp_url_2 = "rtsp://mikvideo.ru:10191/user=admin1&password=mikvideo&channel=2&stream=0.sdp?real_stream";
@@ -15,12 +16,9 @@ QString rtsp_url_10 = "rtsp://mikvideo.ru:10191/user=admin1&password=mikvideo&ch
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    Player player;
 
-    player.show();
-    player.play_2();
-
-
+    HandlerGst handler(rtsp_url_1);
+    handler.play();
 
     return a.exec();
 }

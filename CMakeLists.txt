@@ -33,6 +33,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         handlergst.h handlergst.cpp
         screen.h screen.cpp
+        playercontrolswidget.h playercontrolswidget.cpp
+        bus_callback.h
+        bus_callback.cpp
+        ibuscallback.h ibuscallback.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET GStreamerMSVC APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

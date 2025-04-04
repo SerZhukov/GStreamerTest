@@ -1,56 +1,96 @@
 #include "player.h"
+#include "bus_callback.h"
+#include <QThread>
+#include <thread>
 
 
-Player::Player(QWidget *parent)
-    : QWidget{parent}
+Player::Player(QObject *parent)
+    : QObject{parent}
 {
-    setAttribute(Qt::WA_NativeWindow);
-    resize(640, 480);
+
     /* Initialize GStreamer */
     gst_init(nullptr, nullptr);
+}
 
+void Player::stopLoop()
+{
+    qDebug() << "void Player::stopLoop()";
+    g_main_loop_quit(loop);
 
 }
 
-GMainLoop* Player::loop = g_main_loop_new(nullptr, false);
+void Player::test()
+{
+    qDebug() << "void Player::test()";
+}
+
 
 void Player::setRtsp(const QString &rtsp)
 {
     m_rtsp = rtsp;
 }
 
+void Player::setWinId(const WId wid)
+{
+    m_wid = wid;
+}
+
 void Player::play_1()
 {
-    GstElement *pipeline;
-    GstBus *bus;
-    GstMessage *msg;
+    qDebug() << "void Player::play_1()";
+    qDebug() << "Player thread: " << QThread::currentThreadId();
+
      /* Build the pipeline */
-    pipeline = gst_parse_launch("playbin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm", nullptr);
+    pipeline = gst_parse_launch("playbin uri=file:///D:/Film/Alien.mkv", nullptr);
     GstElement *sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_VIDEO_OVERLAY);
 
     if (sink) {
-        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(sink), winId());
+        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(sink), m_wid);
     }
     /* Start playing */
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
      /* Wait until error or EOS */
-    //bus = gst_element_get_bus(pipeline);
-    //msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_STIME_NONE, static_cast<GstMessageType>(GST_MESSAGE_ERROR | GST_MESSAGE_EOS));
+    bus = gst_element_get_bus(pipeline);
+    bus_watch_id = gst_bus_add_watch(bus, bus_callback, this);
+    gst_object_unref(bus);
+    std::thread gstLoopThread([this]() {
+        loop = g_main_loop_new(nullptr, false);
+        g_main_loop_run(loop);
+    });
+
+    gstLoopThread.detach();
+
+
+
+     // bus = gst_element_get_bus (pipeline);
+     // msg =
+     //     gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+     //                                static_cast<GstMessageType>(GST_MESSAGE_ERROR | GST_MESSAGE_EOS));
+
+     // /* See next tutorial for proper error message handling/parsing */
+     // if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+     //     g_printerr ("An error occurred! Re-run with the GST_DEBUG=*:WARN "
+     //                "environment variable set for more details.\n");
+     // }
+
+
      /* Free resources */
-    //gst_message_unref(msg);
-    //gst_object_unref(bus);
     //gst_element_set_state (pipeline, GST_STATE_NULL);
     //gst_object_unref(pipeline);
+    //g_source_remove (bus_watch_id);
+    //g_main_loop_unref (loop);
 }
 
 void Player::play_2()
 {
+    //for play_2
     GstElement *pipeline;
     GstElement *source;
     GstElement *sink;
     GstBus *bus;
     GstMessage *msg;
     GstStateChangeReturn ret;
+
 
     //Create the elements
     source = gst_element_factory_make("videotestsrc", "source");
@@ -79,7 +119,7 @@ void Player::play_2()
 
     if (GST_IS_VIDEO_OVERLAY(sink))
     {
-        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(sink), winId());
+        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(sink), m_wid);
     }
     else
     {
@@ -164,7 +204,7 @@ void Player::play_3()
     g_object_set (data.source, "uri", "https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm", nullptr);
 
     /* Connect to the pad-added signal */
-    g_signal_connect (data.source, "pad-added", G_CALLBACK (pad_added_handler), &data);
+    //g_signal_connect (data.source, "pad-added", G_CALLBACK (pad_added_handler), &data);
 
     /* Start playing */
     ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
@@ -221,9 +261,6 @@ void Player::play_3()
 
 }
 
-
-
-
 void Player::pad_added_handler(GstElement *src, GstPad *new_pad, CustomData *data)
 {
         GstPad *sink_pad = gst_element_get_static_pad (data->convert, "sink");
@@ -267,29 +304,16 @@ void Player::pad_added_handler(GstElement *src, GstPad *new_pad, CustomData *dat
 
 }
 
-    gboolean Player::bus_callback(GstBus *bus, GstMessage *message, gpointer data)
-    {
-        qDebug() << "Recived message: " << GST_MESSAGE_TYPE(message);
-        switch (GST_MESSAGE_TYPE(message)){
-        case GST_MESSAGE_ERROR :
-        {
-            GError *err;
-            gchar *debug;
 
-            gst_message_parse_error(message, &err, &debug);
-            qDebug() << "Error:  " << err->message;
-            g_error_free(err);
-            g_free(debug);
-            g_main_loop_quit(loop);
-            break;
-        }
-        case GST_MESSAGE_EOS:
-            g_main_loop_quit(loop);
-            break;
-        default:
-            break;
-        }
-        return true;
+    void Player::play_video()
+    {
+        gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    }
+
+    void Player::pause_video()
+    {
+        qDebug() << "void Player::pause_video()";
+        gst_element_set_state(pipeline, GST_STATE_PAUSED);
     }
 
 
