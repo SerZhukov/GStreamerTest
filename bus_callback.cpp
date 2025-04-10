@@ -7,7 +7,7 @@
 
 gboolean bus_callback(GstBus *bus, GstMessage *message, gpointer data = nullptr)
     {
-        qDebug() << "Recived message: " << GST_MESSAGE_TYPE(message);
+        //qDebug() << "Recived message: " << GST_MESSAGE_TYPE(message);
         IBusCallback* iBusCallback = static_cast<IBusCallback*>(data);
 
         switch (GST_MESSAGE_TYPE(message)){
@@ -25,7 +25,6 @@ gboolean bus_callback(GstBus *bus, GstMessage *message, gpointer data = nullptr)
         }
         case GST_MESSAGE_EOS:
             qDebug() << "GST_MESSAGE_EOS:";
-            iBusCallback->test();
             iBusCallback->stopLoop();
             break;
         default:

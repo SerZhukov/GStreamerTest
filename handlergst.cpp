@@ -10,11 +10,9 @@ HandlerGst::HandlerGst(const QString& rtspLink, QObject *parent)
     m_player = new Player;
     m_player->setRtsp(m_rtspLink);
     m_player->setWinId(m_wid);
-    m_player->moveToThread(&workerThread);
-    connect(this, &HandlerGst::playSignal, m_player, &Player::play_1);
     connect(m_screen, &Screen::pause_video, m_player, &Player::pause_video,Qt::QueuedConnection);
     connect(m_screen, &Screen::play_video, m_player, &Player::play_video, Qt::QueuedConnection);
-    workerThread.start();
+
     qDebug() << "Main thread: " << QThread::currentThreadId();
 }
 
@@ -26,6 +24,6 @@ HandlerGst::~HandlerGst()
 void HandlerGst::play()
 {
 
-    emit playSignal();
-    qDebug() << "emit playSignal();";
+    qDebug() << "m_player->start();";
+    m_player->start();
 }

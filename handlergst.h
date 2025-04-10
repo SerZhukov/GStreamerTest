@@ -2,7 +2,6 @@
 #define HANDLERGST_H
 
 #include <QObject>
-#include <QThread>
 #include "screen.h"
 #include "player.h"
 
@@ -18,7 +17,6 @@ private:
     QString m_rtspLink;
     Screen* m_screen;
     Player* m_player;
-    QThread workerThread;
     WId m_wid;
 
 signals:
